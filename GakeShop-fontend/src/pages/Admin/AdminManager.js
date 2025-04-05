@@ -3,11 +3,13 @@ import axios from "axios";
 import HeaderAdmin from "../../components/admin/HeaderAdmin";
 import Footer from "../../components/home/Footer/Footer";
 import FooterBottom from "../../components/home/Footer/FooterBottom";
+import { useNavigate } from "react-router-dom"; // ✅ Thêm import useNavigate
 
 const AdminManager = () => {
   const [admins, setAdmins] = useState([]);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+  const navigate = useNavigate(); // ✅ Dùng để quay lại
   const token = JSON.parse(localStorage.getItem("userInfo"))?.token;
   const currentAdmin = JSON.parse(localStorage.getItem("userInfo"));
 
@@ -44,14 +46,21 @@ const AdminManager = () => {
     }
   };
 
-  // ✅ Kiểm tra current admin có phải là admin đầu tiên không
   const isSuperAdmin = admins.length > 0 && currentAdmin?._id === admins[0]._id;
 
   return (
     <>
       <HeaderAdmin />
       <div className="container mx-auto mt-10">
-        <h2 className="text-center text-2xl font-semibold mb-6">Quản Lý Admin</h2>
+        <div className="mb-6 flex items-center gap-2">
+          <button
+            onClick={() => navigate(-1)} // ✅ Quay lại trang trước
+            className="px-4 py-2 bg-[#d89c4c] text-white rounded hover:bg-[#c07f2f] transition"
+          >
+            Quay Lại
+          </button>
+          <h2 className="text-center text-2xl font-semibold flex-1">Quản Lý Admin</h2>
+        </div>
 
         {error && <p className="text-red-500 text-center mb-4">{error}</p>}
         {message && <p className="text-green-600 text-center mb-4">{message}</p>}
@@ -78,11 +87,8 @@ const AdminManager = () => {
                   <td className="px-4 py-2 border">
                     {[admin.address, admin.city, admin.country].filter(Boolean).join(", ")}
                   </td>
-
-                  {/* Nếu là SuperAdmin thì mới hiện nút */}
                   {isSuperAdmin && (
                     <td className="px-4 py-2 border text-center">
-                      {/* Không cho tự khóa chính mình */}
                       {admin._id !== currentAdmin._id ? (
                         <button
                           onClick={() => handleBlock(admin._id)}

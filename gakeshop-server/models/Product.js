@@ -7,7 +7,8 @@ const productSchema = new mongoose.Schema(
     price: { type: Number, required: true },
     color: { type: String },
     badge: { type: Boolean, default: false },
-    des: { type: String }
+    des: { type: String },
+    category: { type: String, required: true },
   },
   { timestamps: true }
 );

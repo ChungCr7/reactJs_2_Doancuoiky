@@ -1,5 +1,3 @@
-// controllers/productController.js
-
 const Product = require('../models/Product');
 const path = require('path');
 const fs = require('fs');
@@ -30,9 +28,12 @@ exports.getProductById = async (req, res) => {
 // 3) Tạo sản phẩm mới (admin)
 exports.createProduct = async (req, res) => {
   try {
-    const { productName, price, color, badge, des } = req.body;
+    const { productName, price, color, badge, des, category } = req.body; // ✅ thêm category
 
-    // Nếu có file upload
+    if (!category) {
+      return res.status(400).json({ message: 'Category is required' });
+    }
+
     let imgPath = '';
     if (req.file) {
       imgPath = `/uploads/${req.file.filename}`;
@@ -40,12 +41,12 @@ exports.createProduct = async (req, res) => {
 
     const product = new Product({
       productName,
-      img: imgPath, // Lưu đường dẫn ảnh
+      img: imgPath,
       price,
       color,
-      // Ép kiểu boolean nếu frontend gửi "true"/"false"
       badge: badge === 'true' || badge === true,
-      des
+      des,
+      category, // ✅ thêm category
     });
 
     const createdProduct = await product.save();
@@ -58,16 +59,14 @@ exports.createProduct = async (req, res) => {
 // 4) Cập nhật sản phẩm (admin)
 exports.updateProduct = async (req, res) => {
   try {
-    const { productName, price, color, badge, des } = req.body;
+    const { productName, price, color, badge, des, category } = req.body; // ✅ thêm category
     const product = await Product.findById(req.params.id);
 
     if (!product) {
       return res.status(404).json({ message: 'Product not found' });
     }
 
-    // Nếu upload file ảnh mới
     if (req.file) {
-      // Xoá ảnh cũ nếu có
       if (product.img) {
         const oldImgPath = path.join(__dirname, '..', product.img);
         if (fs.existsSync(oldImgPath)) {
@@ -80,9 +79,9 @@ exports.updateProduct = async (req, res) => {
     product.productName = productName || product.productName;
     product.price = price || product.price;
     product.color = color || product.color;
-    // Ép kiểu boolean nếu cần
     product.badge = badge === 'true' || badge === true;
     product.des = des || product.des;
+    product.category = category || product.category; // ✅ thêm dòng này
 
     const updatedProduct = await product.save();
     res.json(updatedProduct);
@@ -100,7 +99,6 @@ exports.deleteProduct = async (req, res) => {
       return res.status(404).json({ message: 'Product not found' });
     }
 
-    // Xoá ảnh trên ổ cứng nếu có
     if (product.img) {
       const oldImgPath = path.join(__dirname, '..', product.img);
       if (fs.existsSync(oldImgPath)) {

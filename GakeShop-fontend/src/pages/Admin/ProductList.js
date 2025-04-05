@@ -48,7 +48,8 @@ const ProductList = () => {
 
   const handleSearch = () => {
     const result = products.filter((p) =>
-      p.productName.toLowerCase().includes(keyword.toLowerCase())
+      p.productName.toLowerCase().includes(keyword.toLowerCase()) ||
+      (p.category && p.category.toLowerCase().includes(keyword.toLowerCase()))
     );
     setFiltered(result);
     setCurrentPage(1);
@@ -82,6 +83,7 @@ const ProductList = () => {
             <th className="p-2">Hình Ảnh</th>
             <th className="p-2">Tên Sản Phẩm</th>
             <th className="p-2">Giá</th>
+            <th className="p-2">Danh Mục</th> {/* 🆕 */}
             <th className="p-2">Badge</th>
             <th className="p-2">Thao Tác</th>
           </tr>
@@ -99,6 +101,7 @@ const ProductList = () => {
               </td>
               <td className="p-2">{item.productName}</td>
               <td className="p-2">{item.price.toLocaleString()} đ</td>
+              <td className="p-2">{item.category || "-"}</td> {/* 🆕 */}
               <td className="p-2">{item.badge ? "✔️" : "❌"}</td>
               <td className="p-2 flex gap-2">
                 <button
@@ -150,7 +153,9 @@ const ProductList = () => {
         </div>
       </div>
 
-      <p className="text-sm text-gray-500 mt-4">Tổng Số Sản Phẩm: {filtered.length}</p>
+      <p className="text-sm text-gray-500 mt-4">
+        Tổng Số Sản Phẩm: {filtered.length}
+      </p>
     </div>
   );
 };

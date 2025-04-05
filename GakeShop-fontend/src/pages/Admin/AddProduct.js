@@ -13,12 +13,17 @@ const AddProduct = () => {
     badge: false,
     des: "",
     img: null,
+    category: "", // ✅ Thêm category
   });
 
   const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]); // ✅ State lưu danh sách category
   const [editingId, setEditingId] = useState(null);
   const [message, setMessage] = useState("");
 
+  const token = JSON.parse(localStorage.getItem("userInfo"))?.token;
+
+  // Fetch product list
   const fetchProducts = async () => {
     try {
       const { data } = await axios.get("http://localhost:5000/api/products");
@@ -28,10 +33,22 @@ const AddProduct = () => {
     }
   };
 
+  // Fetch category list
+  const fetchCategories = async () => {
+    try {
+      const { data } = await axios.get("http://localhost:5000/api/categories");
+      setCategories(data);
+    } catch (error) {
+      console.error("Fetch categories failed", error);
+    }
+  };
+
   useEffect(() => {
     fetchProducts();
+    fetchCategories();
   }, []);
 
+  // Handle form input
   const handleChange = (e) => {
     const { name, value, type, files } = e.target;
 
@@ -44,6 +61,7 @@ const AddProduct = () => {
     }
   };
 
+  // Handle submit (add / update)
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -53,6 +71,7 @@ const AddProduct = () => {
       formData.append("color", form.color);
       formData.append("badge", form.badge);
       formData.append("des", form.des);
+      formData.append("category", form.category); // ✅ Gửi category
       if (form.img) {
         formData.append("img", form.img);
       }
@@ -60,9 +79,7 @@ const AddProduct = () => {
       const config = {
         headers: {
           "Content-Type": "multipart/form-data",
-          Authorization: `Bearer ${
-            JSON.parse(localStorage.getItem("userInfo"))?.token
-          }`,
+          Authorization: `Bearer ${token}`,
         },
       };
 
@@ -74,11 +91,7 @@ const AddProduct = () => {
         );
         setMessage("Cập nhật sản phẩm thành công");
       } else {
-        await axios.post(
-          "http://localhost:5000/api/products",
-          formData,
-          config
-        );
+        await axios.post("http://localhost:5000/api/products", formData, config);
         setMessage("Thêm sản phẩm thành công");
       }
 
@@ -89,6 +102,7 @@ const AddProduct = () => {
         badge: false,
         des: "",
         img: null,
+        category: "", // ✅ reset
       });
       setEditingId(null);
       fetchProducts();
@@ -98,6 +112,7 @@ const AddProduct = () => {
     }
   };
 
+  // Handle edit
   const handleEdit = (prod) => {
     setEditingId(prod._id);
     setForm({
@@ -107,16 +122,16 @@ const AddProduct = () => {
       badge: prod.badge || false,
       des: prod.des || "",
       img: null,
+      category: prod.category || "", // ✅ load lại category
     });
   };
 
+  // Handle delete
   const handleDelete = async (id) => {
     try {
       const config = {
         headers: {
-          Authorization: `Bearer ${
-            JSON.parse(localStorage.getItem("userInfo"))?.token
-          }`,
+          Authorization: `Bearer ${token}`,
         },
       };
       await axios.delete(`http://localhost:5000/api/products/${id}`, config);
@@ -140,7 +155,7 @@ const AddProduct = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Form thêm/sửa */}
+        {/* Form thêm / sửa */}
         <div>
           <h2 className="text-2xl font-semibold text-center mb-4">
             {editingId ? "Chỉnh sửa sản phẩm" : "Thêm sản phẩm"}
@@ -185,6 +200,25 @@ const AddProduct = () => {
                 value={form.color}
                 onChange={handleChange}
               />
+            </div>
+
+            {/* 🆕 Chọn danh mục */}
+            <div>
+              <label className="block mb-1">Danh mục sản phẩm</label>
+              <select
+                name="category"
+                value={form.category}
+                onChange={handleChange}
+                className="w-full border px-4 py-2 rounded"
+                required
+              >
+                <option value="">-- Chọn danh mục --</option>
+                {categories.map((cat) => (
+                  <option key={cat._id} value={cat.name}>
+                    {cat.name}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div className="flex items-center gap-2">
@@ -239,6 +273,7 @@ const AddProduct = () => {
                 <th className="p-2">Ảnh</th>
                 <th className="p-2">Tên</th>
                 <th className="p-2">Giá</th>
+                <th className="p-2">Danh mục</th> {/* 🆕 Thêm danh mục */}
                 <th className="p-2">Badge</th>
                 <th className="p-2">Hành động</th>
               </tr>
@@ -260,6 +295,7 @@ const AddProduct = () => {
                   </td>
                   <td className="p-2">{prod.productName}</td>
                   <td className="p-2">{prod.price.toLocaleString()}₫</td>
+                  <td className="p-2">{prod.category || "-"}</td> {/* 🆕 */}
                   <td className="p-2">{prod.badge ? "✔" : ""}</td>
                   <td className="p-2 flex gap-2">
                     <button
