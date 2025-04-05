@@ -1,9 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import ReactPaginate from "react-paginate";
 import Product from "../../home/Products/Product";
-import { paginationItems } from "../../../constants";
+import axios from "axios";
 
-const items = paginationItems;
 function Items({ currentItems }) {
   return (
     <>
@@ -12,7 +11,7 @@ function Items({ currentItems }) {
           <div key={item._id} className="w-full">
             <Product
               _id={item._id}
-              img={item.img}
+              img={`http://localhost:5000${item.img}`}
               productName={item.productName}
               price={item.price}
               color={item.color}
@@ -25,27 +24,44 @@ function Items({ currentItems }) {
   );
 }
 
-const Pagination = ({ itemsPerPage }) => {
-  // Here we use item offsets; we could also use page offsets
-  // following the API or data you're working with.
+const Pagination = ({ itemsPerPage, selectedCategory }) => {
+  const [allItems, setAllItems] = useState([]);
+  const [filteredItems, setFilteredItems] = useState([]);
   const [itemOffset, setItemOffset] = useState(0);
   const [itemStart, setItemStart] = useState(1);
 
-  // Simulate fetching items from another resources.
-  // (This could be items from props; or items loaded in a local state
-  // from an API endpoint with useEffect and useState)
-  const endOffset = itemOffset + itemsPerPage;
-  //   console.log(`Loading items from ${itemOffset} to ${endOffset}`);
-  const currentItems = items.slice(itemOffset, endOffset);
-  const pageCount = Math.ceil(items.length / itemsPerPage);
+  // Fetch tất cả sản phẩm
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const { data } = await axios.get("http://localhost:5000/api/products");
+        setAllItems(data);
+      } catch (error) {
+        console.error("Failed to fetch products", error);
+      }
+    };
 
-  // Invoke when user click to request another page.
+    fetchProducts();
+  }, []);
+
+  // Mỗi khi selectedCategory thay đổi, lọc sản phẩm
+  useEffect(() => {
+    if (selectedCategory) {
+      const filtered = allItems.filter((item) => item.category === selectedCategory);
+      setFilteredItems(filtered);
+    } else {
+      setFilteredItems(allItems); // Nếu không chọn gì thì hiện tất cả
+    }
+    setItemOffset(0); // reset về trang đầu
+  }, [selectedCategory, allItems]);
+
+  const endOffset = itemOffset + itemsPerPage;
+  const currentItems = filteredItems.slice(itemOffset, endOffset);
+  const pageCount = Math.ceil(filteredItems.length / itemsPerPage);
+
   const handlePageClick = (event) => {
-    const newOffset = (event.selected * itemsPerPage) % items.length;
+    const newOffset = (event.selected * itemsPerPage) % filteredItems.length;
     setItemOffset(newOffset);
-    // console.log(
-    //   `User requested page number ${event.selected}, which is offset ${newOffset},`
-    // );
     setItemStart(newOffset);
   };
 
@@ -67,10 +83,8 @@ const Pagination = ({ itemsPerPage }) => {
           containerClassName="flex text-base font-semibold font-titleFont py-10"
           activeClassName="bg-black text-white"
         />
-
         <p className="text-base font-normal text-lightText">
-          Products from {itemStart === 0 ? 1 : itemStart} to {endOffset} of{" "}
-          {items.length}
+          Products from {itemStart === 0 ? 1 : itemStart} to {endOffset} of {filteredItems.length}
         </p>
       </div>
     </div>
