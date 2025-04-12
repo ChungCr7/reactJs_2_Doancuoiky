@@ -9,6 +9,7 @@ const productSchema = new mongoose.Schema(
     badge: { type: Boolean, default: false },
     des: { type: String },
     category: { type: String, required: true },
+    Brand: { type: String, required: true },
   },
   { timestamps: true }
 );

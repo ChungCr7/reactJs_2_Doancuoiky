@@ -28,10 +28,10 @@ exports.getProductById = async (req, res) => {
 // 3) Tạo sản phẩm mới (admin)
 exports.createProduct = async (req, res) => {
   try {
-    const { productName, price, color, badge, des, category } = req.body; // ✅ thêm category
+    const { productName, price, color, badge, des, category, Brand } = req.body; // ✅ thêm Brand
 
-    if (!category) {
-      return res.status(400).json({ message: 'Category is required' });
+    if (!category || !Brand) {
+      return res.status(400).json({ message: 'Category and Brand are required' });
     }
 
     let imgPath = '';
@@ -46,7 +46,8 @@ exports.createProduct = async (req, res) => {
       color,
       badge: badge === 'true' || badge === true,
       des,
-      category, // ✅ thêm category
+      category,
+      Brand, // ✅ thêm Brand
     });
 
     const createdProduct = await product.save();
@@ -59,7 +60,7 @@ exports.createProduct = async (req, res) => {
 // 4) Cập nhật sản phẩm (admin)
 exports.updateProduct = async (req, res) => {
   try {
-    const { productName, price, color, badge, des, category } = req.body; // ✅ thêm category
+    const { productName, price, color, badge, des, category, Brand } = req.body; // ✅ thêm Brand
     const product = await Product.findById(req.params.id);
 
     if (!product) {
@@ -81,7 +82,8 @@ exports.updateProduct = async (req, res) => {
     product.color = color || product.color;
     product.badge = badge === 'true' || badge === true;
     product.des = des || product.des;
-    product.category = category || product.category; // ✅ thêm dòng này
+    product.category = category || product.category;
+    product.Brand = Brand || product.Brand; // ✅ thêm dòng này
 
     const updatedProduct = await product.save();
     res.json(updatedProduct);
