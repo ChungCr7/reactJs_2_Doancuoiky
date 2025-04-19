@@ -5,8 +5,8 @@ const initialState = {
   products: [],
 };
 
-export const orebiSlice = createSlice({
-  name: "orebi",
+export const gakeSlice = createSlice({
+  name: "gake",
   initialState,
   reducers: {
     addToCart: (state, action) => {
@@ -54,5 +54,6 @@ export const {
   drecreaseQuantity,
   deleteItem,
   resetCart,
-} = orebiSlice.actions;
-export default orebiSlice.reducer;
+  setCartFromServer,
+} = gakeSlice.actions;
+export default gakeSlice.reducer;

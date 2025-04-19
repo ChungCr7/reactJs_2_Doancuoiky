@@ -1,34 +1,71 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import axios from "axios";
 import Breadcrumbs from "../../components/pageProps/Breadcrumbs";
-import { resetCart } from "../../redux/orebiSlice";
+import { resetCart, setCartFromServer } from "../../redux/gakeSlice";
 import { emptyCart } from "../../assets/images/index";
 import ItemCard from "./ItemCard";
 
 const Cart = () => {
   const dispatch = useDispatch();
-  const products = useSelector((state) => state.orebiReducer.products);
-  const [totalAmt, setTotalAmt] = useState("");
-  const [shippingCharge, setShippingCharge] = useState("");
+  const navigate = useNavigate();
+  const products = useSelector((state) => state.gakeReducer.products);
+  const userInfo = useSelector((state) => state.gakeReducer.userInfo);
+
+  const [totalAmt, setTotalAmt] = useState(0);
+  const [shippingCharge, setShippingCharge] = useState(0);
+
   useEffect(() => {
-    let price = 0;
-    products.map((item) => {
-      price += item.price * item.quantity;
-      return price;
-    });
+    if (!userInfo) {
+      navigate("/login");
+      return;
+    }
+
+    const fetchCart = async () => {
+      try {
+        const res = await axios.get("/api/cart", {
+          headers: { Authorization: `Bearer ${userInfo.token}` },
+        });
+        dispatch(setCartFromServer(res.data.items));
+      } catch (error) {
+        console.error("Error fetching cart:", error);
+      }
+    };
+
+    fetchCart();
+  }, [dispatch, userInfo, navigate]);
+
+  useEffect(() => {
+    const price = products.reduce(
+      (acc, item) => acc + item.price * item.quantity,
+      0
+    );
     setTotalAmt(price);
   }, [products]);
+
   useEffect(() => {
     if (totalAmt <= 200) {
       setShippingCharge(30);
     } else if (totalAmt <= 400) {
       setShippingCharge(25);
-    } else if (totalAmt > 401) {
+    } else {
       setShippingCharge(20);
     }
   }, [totalAmt]);
+
+  const handleResetCart = async () => {
+    try {
+      await axios.delete("/api/cart", {
+        headers: { Authorization: `Bearer ${userInfo.token}` },
+      });
+      dispatch(resetCart());
+    } catch (err) {
+      console.error("Failed to clear cart", err);
+    }
+  };
+
   return (
     <div className="max-w-container mx-auto px-4">
       <Breadcrumbs title="Cart" />
@@ -49,7 +86,7 @@ const Cart = () => {
           </div>
 
           <button
-            onClick={() => dispatch(resetCart())}
+            onClick={handleResetCart}
             className="py-2 px-10 bg-red-500 text-white font-semibold uppercase mb-4 hover:bg-red-700 duration-300"
           >
             Reset cart

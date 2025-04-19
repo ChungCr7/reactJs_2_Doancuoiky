@@ -9,7 +9,7 @@ import { paginationItems } from "../../../constants";
 import axios from "axios";
 
 const HeaderBottom = () => {
-  const products = useSelector((state) => state.orebiReducer.products);
+  const products = useSelector((state) => state.gakeReducer.products);
   const [show, setShow] = useState(false);
   const [showUser, setShowUser] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");

@@ -51,6 +51,9 @@ app.use((err, req, res, next) => {
     error: err.message,
   });
 });
+// ========= Cart ============
+const cartRoutes = require('./routes/cartRoutes');
+app.use('/api/cart', cartRoutes);
 
 // ====== Start Server ======
 const PORT = process.env.PORT || 5000;
