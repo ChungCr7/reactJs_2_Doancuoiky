@@ -17,26 +17,30 @@ const Cart = () => {
   const [totalAmt, setTotalAmt] = useState(0);
   const [shippingCharge, setShippingCharge] = useState(0);
 
+  // ✅ Lấy giỏ hàng từ server
   useEffect(() => {
-    if (!userInfo) {
-      navigate("/login");
-      return;
-    }
-
     const fetchCart = async () => {
       try {
-        const res = await axios.get("/api/cart", {
+        const res = await axios.get("http://localhost:5000/api/cart", {
           headers: { Authorization: `Bearer ${userInfo.token}` },
         });
-        dispatch(setCartFromServer(res.data.items));
+        dispatch(setCartFromServer(res.data.items || []));
       } catch (error) {
-        console.error("Error fetching cart:", error);
+        console.error("❌ Error fetching cart:", error);
+        dispatch(setCartFromServer([])); // fallback nếu lỗi
       }
     };
 
-    fetchCart();
-  }, [dispatch, userInfo, navigate]);
+    if (userInfo && userInfo.token) {
+      fetchCart();
+    } else {
+      dispatch(setCartFromServer([])); // 🧹 clear cart nếu chưa đăng nhập
+      navigate("/login");
+    }
+  }, [userInfo, dispatch, navigate]);
 
+
+  // ✅ Tính tổng tiền
   useEffect(() => {
     const price = products.reduce(
       (acc, item) => acc + item.price * item.quantity,
@@ -45,6 +49,7 @@ const Cart = () => {
     setTotalAmt(price);
   }, [products]);
 
+  // ✅ Cập nhật phí vận chuyển
   useEffect(() => {
     if (totalAmt <= 200) {
       setShippingCharge(30);
@@ -55,9 +60,10 @@ const Cart = () => {
     }
   }, [totalAmt]);
 
+  // ✅ Reset giỏ hàng
   const handleResetCart = async () => {
     try {
-      await axios.delete("/api/cart", {
+      await axios.delete("http://localhost:5000/api/cart/clear", {
         headers: { Authorization: `Bearer ${userInfo.token}` },
       });
       dispatch(resetCart());
@@ -79,7 +85,7 @@ const Cart = () => {
           </div>
           <div className="mt-5">
             {products.map((item) => (
-              <div key={item._id}>
+              <div key={item.productId}>
                 <ItemCard item={item} />
               </div>
             ))}
@@ -105,23 +111,24 @@ const Cart = () => {
             </div>
             <p className="text-lg font-semibold">Update Cart</p>
           </div>
+
           <div className="max-w-7xl gap-4 flex justify-end mt-4">
             <div className="w-96 flex flex-col gap-4">
               <h1 className="text-2xl font-semibold text-right">Cart totals</h1>
               <div>
-                <p className="flex items-center justify-between border-[1px] border-gray-400 border-b-0 py-1.5 text-lg px-4 font-medium">
+                <p className="flex items-center justify-between border border-gray-400 border-b-0 py-1.5 text-lg px-4 font-medium">
                   Subtotal
                   <span className="font-semibold tracking-wide font-titleFont">
                     ${totalAmt}
                   </span>
                 </p>
-                <p className="flex items-center justify-between border-[1px] border-gray-400 border-b-0 py-1.5 text-lg px-4 font-medium">
+                <p className="flex items-center justify-between border border-gray-400 border-b-0 py-1.5 text-lg px-4 font-medium">
                   Shipping Charge
                   <span className="font-semibold tracking-wide font-titleFont">
                     ${shippingCharge}
                   </span>
                 </p>
-                <p className="flex items-center justify-between border-[1px] border-gray-400 py-1.5 text-lg px-4 font-medium">
+                <p className="flex items-center justify-between border border-gray-400 py-1.5 text-lg px-4 font-medium">
                   Total
                   <span className="font-bold tracking-wide text-lg font-titleFont">
                     ${totalAmt + shippingCharge}

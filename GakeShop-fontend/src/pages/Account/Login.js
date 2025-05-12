@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import { useDispatch } from "react-redux";
 import axios from "axios";
 
 // Layout
@@ -8,8 +9,13 @@ import HeaderBottom from "../../components/home/Header/HeaderBottom";
 import Footer from "../../components/home/Footer/Footer";
 import FooterBottom from "../../components/home/Footer/FooterBottom";
 
-const SignIn = () => {
+// Redux
+import { setUserInfo } from "../../redux/gakeSlice";
+
+const Login = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState({ email: "", password: "", general: "" });
@@ -24,15 +30,15 @@ const SignIn = () => {
         password,
       });
 
-      // Check nếu tài khoản bị khóa
       if (data.isBlocked) {
         return setError({
           general: "Tài khoản của bạn đã bị khóa do vi phạm chính sách. Vui lòng liên hệ bộ phận hỗ trợ.",
         });
       }
 
-      // Lưu vào localStorage
+      // Lưu vào localStorage + Redux
       localStorage.setItem("userInfo", JSON.stringify(data));
+      dispatch(setUserInfo(data));
 
       // Điều hướng theo vai trò
       if (data.isAdmin) {
@@ -48,12 +54,16 @@ const SignIn = () => {
         setError({
           email: message.toLowerCase().includes("email") ? message : "",
           password: message.toLowerCase().includes("password") ? message : "",
-          general: !(message.toLowerCase().includes("email") || message.toLowerCase().includes("password")) ? message : "",
+          general:
+            !message.toLowerCase().includes("email") &&
+            !message.toLowerCase().includes("password")
+              ? message
+              : "",
         });
       } else if (status === 403) {
         setError({ general: "Tài khoản đã bị khóa." });
       } else if (status === 500) {
-        navigate("/sorry"); // Điều hướng ra trang lỗi riêng
+        navigate("/sorry");
       } else {
         setError({ general: message });
       }
@@ -77,7 +87,9 @@ const SignIn = () => {
               placeholder="Địa chỉ Email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className={`w-full border px-4 py-2 rounded ${error.email ? "border-red-500" : ""}`}
+              className={`w-full border px-4 py-2 rounded ${
+                error.email ? "border-red-500" : ""
+              }`}
               required
             />
             {error.email && <p className="text-sm text-red-500">{error.email}</p>}
@@ -89,7 +101,9 @@ const SignIn = () => {
               placeholder="Mật Khẩu"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className={`w-full border px-4 py-2 rounded ${error.password ? "border-red-500" : ""}`}
+              className={`w-full border px-4 py-2 rounded ${
+                error.password ? "border-red-500" : ""
+              }`}
               required
             />
             {error.password && <p className="text-sm text-red-500">{error.password}</p>}
@@ -99,7 +113,7 @@ const SignIn = () => {
             type="submit"
             className="w-full bg-primeColor text-white py-2 rounded hover:bg-black transition duration-300"
           >
-            {`Đăng Nhập`}
+            Đăng Nhập
           </button>
 
           <p className="text-sm text-center">
@@ -117,4 +131,4 @@ const SignIn = () => {
   );
 };
 
-export default SignIn;
+export default Login;

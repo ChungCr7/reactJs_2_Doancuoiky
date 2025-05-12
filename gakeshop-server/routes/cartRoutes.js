@@ -10,10 +10,10 @@ const { protect } = require('../middleware/authMiddleware');
 
 const router = express.Router();
 
-router.get('/', protect, getCart);
-router.put('/:productId', protect, updateQuantity);
-router.post('/', protect, addToCart);
-router.delete('/:productId', protect, removeItem);
-router.delete('/', protect, clearCart);
+router.get('/', protect, getCart); // GET /api/cart
+router.post('/', protect, addToCart); // POST /api/cart
+router.put('/', protect, updateQuantity); // ✅ PUT /api/cart (Đã khớp)
+router.delete('/item/:productId', protect, removeItem); // ✅ Dùng :productId trong URL
+router.delete('/clear', protect, clearCart);
 
 module.exports = router;

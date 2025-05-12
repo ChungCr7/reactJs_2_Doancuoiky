@@ -38,7 +38,7 @@ const HeaderAdmin = () => {
 
   const handleLogout = () => {
     localStorage.removeItem("userInfo");
-    navigate("/signin");
+    navigate("/login");
   };
 
   return (

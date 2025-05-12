@@ -23,7 +23,7 @@ const Profile = () => {
   useEffect(() => {
     const storedUser = JSON.parse(localStorage.getItem("userInfo"));
     if (!storedUser) {
-      navigate("/signin");
+      navigate("/login");
     } else {
       setUserInfo(storedUser);
       setForm({

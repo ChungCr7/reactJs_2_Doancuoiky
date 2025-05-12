@@ -7,13 +7,18 @@ import {
   ScrollRestoration,
   Navigate,
 } from "react-router-dom";
+// import { useSelector } from "react-redux";
+
+// Layout
 import Footer from "./components/home/Footer/Footer";
 import FooterBottom from "./components/home/Footer/FooterBottom";
 import Header from "./components/home/Header/Header";
 import HeaderBottom from "./components/home/Header/HeaderBottom";
 import SpecialCase from "./components/SpecialCase/SpecialCase";
+
+// Pages
 import About from "./pages/About/About";
-import SignIn from "./pages/Account/SignIn";
+import Login from "./pages/Account/Login";
 import SignUp from "./pages/Account/SignUp";
 import SorryPage from "./pages/Account/SorryPage";
 import Cart from "./pages/Cart/Cart";
@@ -25,6 +30,8 @@ import Payment from "./pages/payment/Payment";
 import ProductDetails from "./pages/ProductDetails/ProductDetails";
 import Shop from "./pages/Shop/Shop";
 import Profile from "./pages/Account/Profile";
+
+// Admin Pages
 import AdminDashboard from "./pages/Admin/AdminDashboard";
 import AddCategory from "./pages/Admin/AddCategory";
 import AddProduct from "./pages/Admin/AddProduct";
@@ -33,6 +40,9 @@ import OrderManager from "./pages/Admin/OrderManager";
 import UserManager from "./pages/Admin/UserManager";
 import AddAdmin from "./pages/Admin/AddAdmin";
 import AdminManager from "./pages/Admin/AdminManager";
+
+// Routes
+import PrivateRoute from "./routes/PrivateRoute";
 
 function Layout() {
   return (
@@ -48,24 +58,17 @@ function Layout() {
   );
 }
 
-// ✅ AdminRoute định nghĩa ngay trong App.js
+// ✅ Admin Route vẫn dùng localStorage
 function AdminRoute({ children }) {
   const userInfo = JSON.parse(localStorage.getItem("userInfo"));
-
-  // Nếu chưa đăng nhập hoặc không phải admin
-  if (!userInfo || !userInfo.isAdmin) {
-    return <Navigate to="/" />;
-  }
-
-  // Nếu là admin, render children
-  return children;
+  return userInfo && userInfo.isAdmin ? children : <Navigate to="/" />;
 }
 
-// Tạo router
+// Router structure
 const router = createBrowserRouter(
   createRoutesFromElements(
     <Route>
-      {/* ========== PUBLIC LAYOUT ========== */}
+      {/* PUBLIC LAYOUT */}
       <Route path="/" element={<Layout />}>
         <Route index element={<Home />} />
         <Route path="/shop" element={<Shop />} />
@@ -74,17 +77,40 @@ const router = createBrowserRouter(
         <Route path="/journal" element={<Journal />} />
         <Route path="/offer" element={<Offer />} />
         <Route path="/product/:_id" element={<ProductDetails />} />
-        <Route path="/cart" element={<Cart />} />
-        <Route path="/paymentgateway" element={<Payment />} />
-        <Route path="/profile" element={<Profile />} />
+
+        {/* PROTECTED ROUTES (login required) */}
+        <Route
+          path="/cart"
+          element={
+            <PrivateRoute>
+              <Cart />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/paymentgateway"
+          element={
+            <PrivateRoute>
+              <Payment />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            <PrivateRoute>
+              <Profile />
+            </PrivateRoute>
+          }
+        />
       </Route>
 
-      {/* ========== AUTH ROUTES ========== */}
+      {/* AUTH ROUTES */}
       <Route path="/signup" element={<SignUp />} />
-      <Route path="/signin" element={<SignIn />} />
+      <Route path="/login" element={<Login />} />
       <Route path="/sorry" element={<SorryPage />} />
 
-      {/* ========== ADMIN ROUTES ========== */}
+      {/* ADMIN ROUTES */}
       <Route
         path="/admin"
         element={

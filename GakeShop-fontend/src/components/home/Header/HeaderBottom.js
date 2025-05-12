@@ -4,23 +4,26 @@ import { HiOutlineMenuAlt4 } from "react-icons/hi";
 import { FaSearch, FaUser, FaCaretDown, FaShoppingCart } from "react-icons/fa";
 import Flex from "../../designLayouts/Flex";
 import { Link, useNavigate } from "react-router-dom";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { paginationItems } from "../../../constants";
 import axios from "axios";
+import { logout } from "../../../redux/gakeSlice";
 
 const HeaderBottom = () => {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const userInfo = useSelector((state) => state.gakeReducer.userInfo);
   const products = useSelector((state) => state.gakeReducer.products);
+
   const [show, setShow] = useState(false);
   const [showUser, setShowUser] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredProducts, setFilteredProducts] = useState([]);
-  const [categories, setCategories] = useState([]); // 🆕 Fetch category
+  const [categories, setCategories] = useState([]);
   const [setShowSearchBar] = useState(false);
-  const navigate = useNavigate();
-  const ref = useRef();
-  const userInfo = JSON.parse(localStorage.getItem("userInfo"));
 
-  // Xử lý click ngoài menu đóng menu
+  const ref = useRef();
+
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (ref.current && ref.current.contains(e.target)) {
@@ -33,13 +36,10 @@ const HeaderBottom = () => {
     return () => document.body.removeEventListener("click", handleClickOutside);
   }, []);
 
-  // 🆕 Fetch danh mục sản phẩm
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const { data } = await axios.get(
-          "http://localhost:5000/api/categories"
-        );
+        const { data } = await axios.get("http://localhost:5000/api/categories");
         setCategories(data);
       } catch (error) {
         console.error("Failed to fetch categories", error);
@@ -48,7 +48,6 @@ const HeaderBottom = () => {
     fetchCategories();
   }, []);
 
-  // Search
   const handleSearch = (e) => {
     setSearchQuery(e.target.value);
   };
@@ -61,16 +60,25 @@ const HeaderBottom = () => {
   }, [searchQuery]);
 
   const handleLogout = () => {
-    localStorage.removeItem("userInfo");
+    dispatch(logout()); // ❌ KHÔNG gọi persistor.purge()
     setShowUser(false);
-    navigate("/signin");
+    navigate("/login");
+  };
+
+  const handleCartClick = () => {
+    if (!userInfo || !userInfo.token) {
+      alert("Vui lòng đăng nhập để xem giỏ hàng");
+      navigate("/login");
+    } else {
+      navigate("/cart");
+    }
   };
 
   return (
     <div className="w-full bg-[#F5F5F3] relative">
       <div className="max-w-container mx-auto">
         <Flex className="flex flex-col lg:flex-row items-start lg:items-center justify-between w-full px-4 pb-4 lg:pb-0 h-full lg:h-24">
-          {/* ==== MENU CATEGORIES ==== */}
+          {/* ==== CATEGORY MENU ==== */}
           <div
             onClick={() => setShow(!show)}
             ref={ref}
@@ -98,7 +106,7 @@ const HeaderBottom = () => {
             )}
           </div>
 
-          {/* ==== SEARCH BAR ==== */}
+          {/* ==== SEARCH ==== */}
           <div className="relative w-full lg:w-[600px] h-[50px] text-base text-primeColor bg-white flex items-center gap-2 justify-between px-6 rounded-xl">
             <input
               className="flex-1 h-full outline-none placeholder:text-[#C4C4C4] placeholder:text-[14px]"
@@ -115,10 +123,7 @@ const HeaderBottom = () => {
                     key={item._id}
                     onClick={() => {
                       navigate(
-                        `/product/${item.productName
-                          .toLowerCase()
-                          .split(" ")
-                          .join("")}`,
+                        `/product/${item.productName.toLowerCase().split(" ").join("")}`,
                         { state: { item } }
                       );
                       setShowSearchBar(true);
@@ -128,15 +133,11 @@ const HeaderBottom = () => {
                   >
                     <img className="w-24" src={item.img} alt="productImg" />
                     <div className="flex flex-col gap-1">
-                      <p className="font-semibold text-lg">
-                        {item.productName}
-                      </p>
+                      <p className="font-semibold text-lg">{item.productName}</p>
                       <p className="text-xs">{item.des}</p>
                       <p className="text-sm">
                         Price:{" "}
-                        <span className="text-primeColor font-semibold">
-                          ${item.price}
-                        </span>
+                        <span className="text-primeColor font-semibold">${item.price}</span>
                       </p>
                     </div>
                   </div>
@@ -152,13 +153,9 @@ const HeaderBottom = () => {
               className="flex items-center gap-2 text-primeColor font-medium"
             >
               <FaUser className="text-[18px]" />
-              {userInfo ? (
-                <span className="text-[14px] hidden sm:inline">
-                  {userInfo.name}
-                </span>
-              ) : (
-                <span className="text-[14px] hidden sm:inline">Tài Khoản</span>
-              )}
+              <span className="text-[14px] hidden sm:inline">
+                {userInfo ? userInfo.name : "Tài Khoản"}
+              </span>
               <FaCaretDown className="text-[14px]" />
             </div>
 
@@ -171,7 +168,7 @@ const HeaderBottom = () => {
               >
                 {!userInfo ? (
                   <>
-                    <Link to="/signin">
+                    <Link to="/login">
                       <li className="text-gray-400 px-4 py-1 border-b border-gray-400 hover:border-white hover:text-white cursor-pointer">
                         Login
                       </li>
@@ -200,14 +197,12 @@ const HeaderBottom = () => {
               </motion.ul>
             )}
 
-            <Link to="/cart">
-              <div className="relative">
-                <FaShoppingCart />
-                <span className="absolute font-titleFont top-3 -right-2 text-xs w-4 h-4 flex items-center justify-center rounded-full bg-primeColor text-white">
-                  {products.length > 0 ? products.length : 0}
-                </span>
-              </div>
-            </Link>
+            <div onClick={handleCartClick} className="relative">
+              <FaShoppingCart />
+              <span className="absolute font-titleFont top-3 -right-2 text-xs w-4 h-4 flex items-center justify-center rounded-full bg-primeColor text-white">
+                {products.length}
+              </span>
+            </div>
           </div>
         </Flex>
       </div>

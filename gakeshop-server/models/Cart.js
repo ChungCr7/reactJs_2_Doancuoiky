@@ -6,13 +6,12 @@ const cartItemSchema = new mongoose.Schema({
     ref: 'Product',
     required: true,
   },
-  name: String,
-  price: Number,
-  quantity: {
-    type: Number,
-    default: 1,
-  },
-  image: String,
+  productName: { type: String, required: true },
+  price: { type: Number, required: true },
+  quantity: { type: Number, default: 1 },
+  image: { type: String }, // tên file ảnh: vd. 'watch.jpg'
+  color: { type: String },
+  brand: { type: String },
 });
 
 const cartSchema = new mongoose.Schema({

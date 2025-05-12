@@ -1,6 +1,10 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import { useDispatch } from "react-redux";
 import axios from "axios";
+
+// Redux
+import { setUserInfo } from "../../redux/gakeSlice";
 
 // Import layout
 import Header from "../../components/home/Header/Header";
@@ -10,6 +14,8 @@ import FooterBottom from "../../components/home/Footer/FooterBottom";
 
 const SignUp = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -34,11 +40,19 @@ const SignUp = () => {
 
     try {
       const { data } = await axios.post("http://localhost:5000/api/users/register", form);
+
+      // Lưu vào localStorage
       localStorage.setItem("userInfo", JSON.stringify(data));
+
+      // Đồng bộ Redux
+      dispatch(setUserInfo(data));
+
+      // Điều hướng về trang chủ
       navigate("/");
     } catch (err) {
       const status = err.response?.status;
       const message = err.response?.data?.message || "Something went wrong";
+
       if (status === 400) {
         setError({ general: message });
       } else if (status === 500) {
@@ -75,7 +89,7 @@ const SignUp = () => {
 
           <p className="text-sm text-center mt-2">
             Already have an account?{" "}
-            <Link to="/signin" className="text-blue-600 hover:underline">
+            <Link to="/login" className="text-blue-600 hover:underline">
               Sign In
             </Link>
           </p>
